@@ -12,10 +12,14 @@ namespace CryptoChain.Models
 
         private List<Block> localChain;
 
+
+
         public BlockChain()
         {
             this.localChain = new List<Block> { Block.Genesis() };
         }
+
+
 
         public void AddBlock(object data)
         {
@@ -23,6 +27,9 @@ namespace CryptoChain.Models
 
             this.localChain.Add(newBlock);
         }
+
+
+
 
         public static bool IsValidChain(List<Block> chain)
         {
@@ -53,6 +60,9 @@ namespace CryptoChain.Models
             Logger.Info("The chain is valid.");
             return true;
         }
+
+
+
 
         public void ReplaceChain(List<Block> chain)
         {
