@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using CryptoChain.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,11 +18,10 @@ namespace CryptoChain
 
         public static void Main(string[] args)
         {
-            var logger = NLogBuilder.ConfigureNLog("nlog.config")
-                                    .GetCurrentClassLogger();
+            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
-                logger.Debug("init main function");
+                logger.Info("init main function");
                 var host = CreateHostBuilder(args).Build();
 
                 //using (var scope = host.Services.CreateScope())
@@ -74,7 +74,7 @@ namespace CryptoChain
                      //options.Limits.MinResponseDataRate =
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
 
-                     options.Listen(IPAddress.Any, 8080);
+                     options.Listen(IPAddress.Any, Config.HTTP_PORT);
 
                  });
              });

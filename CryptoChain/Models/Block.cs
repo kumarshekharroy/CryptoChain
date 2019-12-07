@@ -6,13 +6,13 @@ using System.Linq;
 namespace CryptoChain.Models
 {
     public class Block
-    {
-        public DateTime Timestamp { get; private set; }
+    { 
         public string LastHash { get; set; }
-        public string Hash { get; set; }
         public object Data { get; set; }
         public long Nonce { get; set; }
         public int Difficulty { get; set; }
+        public DateTime Timestamp { get; private set; }
+        public string Hash { get; set; }
 
 
 
@@ -32,7 +32,7 @@ namespace CryptoChain.Models
         }
 
 
-        public static Block Genesis() => new Block(timestamp: DateTime.MinValue, data: new object(), lastHash: string.Empty, nonce: 0, difficulty: 3, hash: string.Empty);
+        public static Block Genesis() => new Block(timestamp: Config.GENESIS_TIMESTAMP, data: Config.GENESIS_DATA, lastHash: Config.GENESIS_PREV_HASH, nonce: Config.GENESIS_NONCE, difficulty: Config.GENESIS_DIFFICULTY, hash: Helper.Sha256(Config.GENESIS_TIMESTAMP.ToString(), Config.GENESIS_PREV_HASH, Config.GENESIS_DATA.SerializeObject(), Config.GENESIS_NONCE.ToString(), Config.GENESIS_DIFFICULTY.ToString()));
 
 
         public static Block MineBlock(Block lastBlock, object data)
@@ -54,12 +54,12 @@ namespace CryptoChain.Models
 
                 currentBlockHash = Helper.Sha256(timestamp.ToString(), lastBlock.Hash, data.SerializeObject(), nonce.ToString(), difficulty.ToString());
 
-            } while (!Convert.ToString(Convert.ToInt64(currentBlockHash, 16), 2).StartsWith(string.Concat(Enumerable.Repeat("0", difficulty))));
+            } while (!Helper.Hex2Binary(currentBlockHash).StartsWith(string.Concat(Enumerable.Repeat("0", difficulty))));
 
 
 
 
-            return new Block(timestamp: timestamp, lastHash: lastBlock.Hash, data: data, nonce: nonce, difficulty: lastBlock.Difficulty, hash: currentBlockHash);
+            return new Block(timestamp: timestamp, lastHash: lastBlock.Hash, data: data, nonce: nonce, difficulty: difficulty, hash: currentBlockHash);
         }
 
 

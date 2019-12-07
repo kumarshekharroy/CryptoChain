@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -17,7 +18,7 @@ namespace CryptoChain.Utility
         {
             if (dict == null)
                 return null;
-            return new ConcurrentDictionary<TKey, TValue>(dict); 
+            return new ConcurrentDictionary<TKey, TValue>(dict);
         }
 
         public static Dictionary<string, string> ToReleventInfo(this Exception e)
@@ -45,7 +46,7 @@ namespace CryptoChain.Utility
             }
             return error;
         }
-     
+
         public static string SerializeObject(this object myObject, bool isFormattingIntended = true) => JsonConvert.SerializeObject(myObject, isFormattingIntended ? Formatting.Indented : Formatting.None, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, NullValueHandling = NullValueHandling.Ignore });
 
 
@@ -67,6 +68,7 @@ namespace CryptoChain.Utility
         public static long ToLong(this double d) => Convert.ToInt64(Math.Truncate(d));
 
 
+        public static string? GetIP(this HttpContext httpContext) => httpContext.Request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
 
         #region DateTime
         public static readonly DateTime MinDateTimeJS = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);

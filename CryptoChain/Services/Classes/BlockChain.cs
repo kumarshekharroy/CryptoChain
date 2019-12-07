@@ -1,12 +1,15 @@
-﻿using CryptoChain.Utility;
+﻿using CryptoChain.Models;
+using CryptoChain.Services.Interfaces;
+using CryptoChain.Utility;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CryptoChain.Models
+namespace CryptoChain.Services.Classes
 {
-    public class BlockChain
+    public class BlockChain : IBlockChain
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -20,6 +23,7 @@ namespace CryptoChain.Models
         }
 
 
+        public ReadOnlyCollection<Block> LocalChain { get { return this.localChain.AsReadOnly(); } }
 
         public void AddBlock(object data)
         {
@@ -66,6 +70,10 @@ namespace CryptoChain.Models
             return true;
         }
 
+        bool IBlockChain.IsValidChain(List<Block> chain)
+        {
+            return BlockChain.IsValidChain(chain);
+        }
 
 
 
