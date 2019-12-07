@@ -18,7 +18,7 @@ namespace CryptoChain.Models
 
 
 
-        public Block(DateTime timestamp, string lastHash, string hash, object data, long nonce, int difficulty)
+      private Block(DateTime timestamp, string lastHash, string hash, object data, long nonce, int difficulty)
         {
             this.Timestamp = timestamp;
             this.LastHash = lastHash;

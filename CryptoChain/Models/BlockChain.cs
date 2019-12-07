@@ -43,16 +43,21 @@ namespace CryptoChain.Models
             {
                 var block = chain[i];
 
-                var lastBlockHash = chain[i - 1].Hash;
+                var lastBlock = chain[i - 1];
 
-                if (block.LastHash != lastBlockHash)
+                if (lastBlock.Hash != block.LastHash)
                 {
                     Logger.Info("The chain has broken link.");
                     return false;
                 }
-                if (block.Hash != Helper.Sha256(block.TS.ToString(), block.LastHash, block.Data.SerializeObject()))
+                if (block.Hash != Helper.Sha256(block.Timestamp.ToString(), block.LastHash, block.Data.SerializeObject()))
                 {
                     Logger.Info("The chain has invalid block.");
+                    return false;
+                }
+                if (Math.Abs(lastBlock.Difficulty - block.Difficulty) > 1)
+                {
+                    Logger.Info("The chain has block with jumped difficulty.");
                     return false;
                 }
             }
