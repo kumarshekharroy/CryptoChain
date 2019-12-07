@@ -23,14 +23,15 @@ namespace CryptoChain.Controllers
         private readonly ILogger<ApiController> _ILogger;
         private readonly IClock _IClock;
         private readonly IBlockChain _IBlockChain;
+        private readonly IRedis _IRedis;
 
 
-        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain)
+        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain, IRedis redis)
         {
             this._ILogger = logger;
             this._IClock = clock;
             this._IBlockChain = blockChain;
-
+            this._IRedis = redis;
         }
         [HttpPost, HttpGet]
         [Route("~/ping")]
@@ -67,13 +68,13 @@ namespace CryptoChain.Controllers
         {
             try
             {
-                using var reader = new StreamReader(Request.Body); 
+                using var reader = new StreamReader(Request.Body);
                 var parsed_body = JsonConvert.DeserializeObject<dynamic>(await reader.ReadToEndAsync());
 
                 var data = parsed_body.data;
 
                 _IBlockChain.AddBlock(data);
-
+                await _IRedis.BroadcastChain();
                 return Redirect("/api/blocks");
             }
             catch (Exception ex)

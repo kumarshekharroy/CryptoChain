@@ -18,24 +18,21 @@ namespace CryptoChain.Models
 
 
 
-      private Block(DateTime timestamp, string lastHash, string hash, object data, long nonce, int difficulty)
+      public Block(DateTime timestamp, string lastHash, string hash, object data, long nonce, int difficulty)
         {
             this.Timestamp = timestamp;
             this.LastHash = lastHash;
             this.Hash = hash;
             this.Data = data;
             this.Nonce = nonce;
-            this.Difficulty = difficulty;
-
-
+            this.Difficulty = difficulty; 
 
         }
+         
+        public static Block Genesis() => new Block(timestamp: Constants.GENESIS_TIMESTAMP, data: Constants.GENESIS_DATA, lastHash: Constants.GENESIS_PREV_HASH, nonce: Constants.GENESIS_NONCE, difficulty: Constants.GENESIS_DIFFICULTY, hash: Helper.Sha256(Constants.GENESIS_TIMESTAMP.ToString(), Constants.GENESIS_PREV_HASH, Constants.GENESIS_DATA.SerializeObject(), Constants.GENESIS_NONCE.ToString(), Constants.GENESIS_DIFFICULTY.ToString()));
 
 
-        public static Block Genesis() => new Block(timestamp: Config.GENESIS_TIMESTAMP, data: Config.GENESIS_DATA, lastHash: Config.GENESIS_PREV_HASH, nonce: Config.GENESIS_NONCE, difficulty: Config.GENESIS_DIFFICULTY, hash: Helper.Sha256(Config.GENESIS_TIMESTAMP.ToString(), Config.GENESIS_PREV_HASH, Config.GENESIS_DATA.SerializeObject(), Config.GENESIS_NONCE.ToString(), Config.GENESIS_DIFFICULTY.ToString()));
-
-
-        public static Block MineBlock(Block lastBlock, object data)
+        internal static Block MineBlock(Block lastBlock, object data)
         {
             using var Clock = new Clock();
 
@@ -68,7 +65,7 @@ namespace CryptoChain.Models
             if (originalBlock.Difficulty <= 1)
                 return 1;
 
-            if ((timestamp - originalBlock.Timestamp).TotalMilliseconds > Config.MINE_RATE_IN_MILLISEC) return originalBlock.Difficulty - 1;
+            if ((timestamp - originalBlock.Timestamp).TotalMilliseconds > Constants.MINE_RATE_IN_MILLISEC) return originalBlock.Difficulty - 1;
 
             return originalBlock.Difficulty + 1;
         }

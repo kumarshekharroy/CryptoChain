@@ -1,10 +1,12 @@
 ﻿using CryptoChain.Models;
 using CryptoChain.Services.Interfaces;
 using CryptoChain.Utility;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace CryptoChain.Services.Classes
@@ -20,7 +22,28 @@ namespace CryptoChain.Services.Classes
         public BlockChain()
         {
             this.localChain = new List<Block> { Block.Genesis() };
+
+            SyncChain();
         }
+
+        private void SyncChain()
+        {
+            using var webClient = new WebClient();
+            try
+            {
+                Logger.Info($"Getting latest chain from peer node : {Constants.ROOT_NODE_URL}/api/blocks.");
+                var response = webClient.DownloadString($"{Constants.ROOT_NODE_URL}/api/blocks");
+                var newChain = JsonConvert.DeserializeObject<List<Block>>(response);
+                this.ReplaceChain(newChain);
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, $"Error while getting latest chain from peer node : {Constants.ROOT_NODE_URL}/api/blocks.");
+            }
+
+        }
+
 
 
         public ReadOnlyCollection<Block> LocalChain { get { return this.localChain.AsReadOnly(); } }
@@ -30,10 +53,9 @@ namespace CryptoChain.Services.Classes
             var newBlock = Block.MineBlock(localChain[localChain.Count - 1], data);
 
             this.localChain.Add(newBlock);
+
+
         }
-
-
-
 
         public static bool IsValidChain(List<Block> chain)
         {

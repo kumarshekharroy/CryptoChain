@@ -20,6 +20,7 @@ namespace CryptoChain
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IClock, Clock>();
+            services.AddSingleton<IRedis, Redis>();
             services.AddSingleton<IBlockChain, BlockChain>();
 
             services.AddCors(options =>

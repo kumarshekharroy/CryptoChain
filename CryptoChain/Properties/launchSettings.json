@@ -6,7 +6,17 @@
       "launchUrl": "ping",
       "applicationUrl": "http://localhost:3000",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "APP_NANE": "CryptoChain",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "REDIS_SERVER": "127.0.0.1",
+        "REDIS_PORT": "6379",
+        "REDIS_PASSWORD": "AabraKaDabra",
+        "REDIS_TIMEOUT_IN_MILLISEC": "300000",
+        "REDIS_CONNECT_RETRY_LIMIT": "5",
+        "REDIS_ABORT_ON_CONNECT_FAIL": "false",
+        "HTTP_PORT": "3000",
+        "MINE_RATE_IN_MILLISEC": "5000"
+
       }
     }
   }

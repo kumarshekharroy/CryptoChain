@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using CryptoChain.Models;
+using CryptoChain.Utility;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,9 +74,12 @@ namespace CryptoChain
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                      //options.Limits.MinResponseDataRate =
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+                     var ss = ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain");
 
-                     options.Listen(IPAddress.Any, Config.HTTP_PORT);
-
+                   if (!ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain").Any(x => x.PortNumber == Constants.HTTP_PORT))
+                     options.Listen(IPAddress.Any, Constants.HTTP_PORT);
+                   else
+                         options.Listen(IPAddress.Any, (ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain").Select(x=>x.PortNumber).DefaultIfEmpty(3000).Max()+1));
                  });
              });
 
