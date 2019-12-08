@@ -57,7 +57,7 @@ namespace CryptoChain.Services.Classes
 
         private async Task PublishToChannelAsync(string channelName, string message)
         {
-            await this.Subscriber.PublishAsync(channelName, message);
+            await this.Subscriber.PublishAsync(string.Concat(Constants.PUBSUB_CHANNEL_PPREFIX,"-", channelName) , message);
         }
 
 
@@ -67,9 +67,16 @@ namespace CryptoChain.Services.Classes
             {
                 _ILogger.LogInformation($"Subscribing to Channel : {channelInfo.Name}");
 
-                this.Subscriber.Subscribe(channelInfo.Name).OnMessage(channelMessage =>
+                this.Subscriber.Subscribe(string.Concat("*","-",channelInfo.Name)).OnMessage(channelMessage =>
                 {
                     //Note: exceptions are caught and discarded by StackExchange.Redis here, to prevent cascading failures. To handle failures, use a try/catch inside your handler to do as you wish with any exceptions.
+                    _ILogger.LogInformation($"Channel : {(string)channelMessage.Channel} => {(string)channelMessage.Message} ");
+
+                    //Discard Self published message
+                    if (((string)channelMessage.Channel).StartsWith(Constants.PUBSUB_CHANNEL_PPREFIX))
+                    {
+                        _ILogger.LogInformation($"Discarded Self Published Message from Channel : {(string)channelMessage.Channel}"); 
+                    }
                     _ILogger.LogInformation($"Channel : {(string)channelMessage.Channel} => {(string)channelMessage.Message} ");
 
                     switch ((string)channelMessage.Channel)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,10 +14,11 @@ namespace CryptoChain.Models
             public static string BLOCKCHAIN { get { return "BLOCKCHAIN"; } }  
         }
 
+        public static string PUBSUB_CHANNEL_PPREFIX = Guid.NewGuid().ToString();
 
         #region Redis
-        public static string REDIS_SERVER { get { return Environment.GetEnvironmentVariable("REDIS_SERVER") ?? throw new KeyNotFoundException("Environment variable `REDIS_SERVER` not found."); } }
-        public static string APP_NANE { get { return Environment.GetEnvironmentVariable("APP_NANE") ?? throw new KeyNotFoundException("Environment variable `APP_NANE` not found."); } }
+        public static string REDIS_SERVER { get { return Environment.GetEnvironmentVariable("REDIS_SERVER") ?? "127.0.0.1"; } }//  throw new KeyNotFoundException("Environment variable `REDIS_SERVER` not found."); } }
+        public static string APP_NANE { get { return Environment.GetEnvironmentVariable("APP_NANE") ?? "CryptoChain"; } } //throw new KeyNotFoundException("Environment variable `APP_NANE` not found."); } }
 
         public static int REDIS_PORT
         {
@@ -90,6 +92,8 @@ namespace CryptoChain.Models
         public static long GENESIS_NONCE { get { return 0L; } }
         public static int GENESIS_DIFFICULTY { get { return 3; } }
         public static object GENESIS_DATA { get { return "AabraKaDabra"; } }
+        
+        public static long STARTING_BALANCE { get { return 1000; } }
 
     }
 }

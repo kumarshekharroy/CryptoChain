@@ -76,7 +76,7 @@ namespace CryptoChain.Services.Classes
                     Logger.Info("The chain has broken link.");
                     return false;
                 }
-                if (block.Hash != Helper.Sha256(block.Timestamp.ToString(), block.LastHash, block.Data.SerializeObject()))
+                if (block.Hash != Helper.Sha256(block.Timestamp.ToString(), block.LastHash, block.Data.SerializeObject(),block.Nonce.ToString(),block.Difficulty.ToString()))
                 {
                     Logger.Info("The chain has invalid block.");
                     return false;

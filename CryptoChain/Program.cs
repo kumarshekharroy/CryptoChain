@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using CryptoChain.Models;
+using CryptoChain.Services.Classes;
 using CryptoChain.Utility;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -18,10 +20,10 @@ namespace CryptoChain
     {
 
         public static void Main(string[] args)
-        {
+        { 
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
-            {
+            { 
                 logger.Info("init main function");
                 var host = CreateHostBuilder(args).Build();
 
@@ -45,13 +47,14 @@ namespace CryptoChain
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception => {ex.Message}");
                 logger.Error(ex, "error in init");
                 throw;
             }
             finally
             {
                 NLog.LogManager.Shutdown();
-            }
+            } 
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
@@ -74,12 +77,15 @@ namespace CryptoChain
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                      //options.Limits.MinResponseDataRate =
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
-                     var ss = ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain");
-
-                   if (!ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain").Any(x => x.PortNumber == Constants.HTTP_PORT))
-                     options.Listen(IPAddress.Any, Constants.HTTP_PORT);
-                   else
-                         options.Listen(IPAddress.Any, (ProcessPorts.ProcessPortMap.Where(x => x.ProcessName.ToLower() == "cryptochain").Select(x=>x.PortNumber).DefaultIfEmpty(3000).Max()+1));
+                      
+                     if (Debugger.IsAttached)
+                     { 
+                         options.Listen(IPAddress.Loopback, Constants.HTTP_PORT+1);
+                     }
+                     else
+                     {
+                         options.Listen(IPAddress.Loopback, Constants.HTTP_PORT);
+                     }
                  });
              });
 
