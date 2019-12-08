@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using CryptoChain.Models;
+using StackExchange.Redis;
 using System.Threading.Tasks;
 
 namespace CryptoChain.Services.Interfaces
@@ -13,5 +14,6 @@ namespace CryptoChain.Services.Interfaces
         //void PublishToChannel(string channelName, object message);
         //Task PublishToChannelAsync(string channelName, object message);
         Task BroadcastChain();
+        Task BroadcastTransaction(Transaction transaction);
     }
 }

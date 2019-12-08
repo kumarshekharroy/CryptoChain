@@ -11,7 +11,8 @@ namespace CryptoChain.Models
         public static class PUBSUB_CHANNEL
         {
             public static string TEST { get { return "TEST"; } }
-            public static string BLOCKCHAIN { get { return "BLOCKCHAIN"; } }  
+            public static string BLOCKCHAIN { get { return "BLOCKCHAIN"; } }
+            public static string TRANSACTION { get { return "TRANSACTION"; } }
         }
 
         public static string PUBSUB_CHANNEL_PPREFIX = Guid.NewGuid().ToString();

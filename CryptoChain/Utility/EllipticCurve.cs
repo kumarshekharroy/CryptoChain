@@ -49,7 +49,7 @@ namespace CryptoChain.Utility
         public static bool VerifySignature(string publicKey, string data, string signature)
         { 
             var inputData = Encoding.UTF8.GetBytes(Helper.Sha256(data));
-            var signer = SignerUtilities.GetSigner("secp256k1");
+            var signer = SignerUtilities.GetSigner("SHA-256withECDSA");
             signer.Init(false, (AsymmetricKeyParameter)PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
             signer.BlockUpdate(inputData, 0, inputData.Length);
             return signer.VerifySignature(Convert.FromBase64String(signature));
@@ -57,7 +57,7 @@ namespace CryptoChain.Utility
         public static string Sign(this AsymmetricCipherKeyPair keyPair, string data)
         { 
             var inputData = Encoding.UTF8.GetBytes(Helper.Sha256(data)); 
-            var signer = SignerUtilities.GetSigner("secp256k1");
+            var signer = SignerUtilities.GetSigner("SHA-256withECDSA");
             signer.Init(true,keyPair.Private);
             signer.BlockUpdate(inputData, 0, inputData.Length);
              

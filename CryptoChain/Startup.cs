@@ -22,6 +22,8 @@ namespace CryptoChain
             services.AddScoped<IClock, Clock>();
             services.AddSingleton<IRedis, Redis>();
             services.AddSingleton<IBlockChain, BlockChain>();
+            services.AddSingleton<ITransactionPool, TransactionPool>();
+            services.AddSingleton<IWallet, Wallet>();
 
             services.AddCors(options =>
             {
@@ -49,7 +51,7 @@ namespace CryptoChain
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,IRedis redis)
         {
             if (env.IsDevelopment())
             {

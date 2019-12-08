@@ -1,4 +1,5 @@
 ﻿using CryptoChain.Services.Classes;
+using CryptoChain.Services.Interfaces;
 using CryptoChain.Utility;
 using System;
 using System.Collections.Generic;
@@ -10,27 +11,22 @@ namespace CryptoChain.Models
     public class Transaction
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        public string ID { get; set; }
-
-        public class InputMap
-        {
-            public DateTime Timestamp { get; set; }
-            public long Amount { get; set; }
-            public string Address { get; set; }
-            public string Signature { get; set; }
-        }
-        public Dictionary<string, long> OutputMap { get; set; }
-        public InputMap Input { get; set; }
         private Clock clock;
+
+        public string ID { get; set; }
+        public Dictionary<string, long> OutputMap { get; set; }
+        public Input Input { get; set; }
+        public Transaction()
+        {
+
+        }
         public Transaction(Wallet senderWallet, string recipient, long amount)
         {
-
             this.ID = Guid.NewGuid().ToString();
             this.clock = new Clock();
             this.OutputMap = this.CreateOutputMap(senderWallet, recipient, amount);
             this.Input = this.CreateInput(senderWallet, this.OutputMap);
         }
-
 
         private Dictionary<string, long> CreateOutputMap(Wallet senderWallet, string recipient, long amount)
         {
@@ -39,35 +35,52 @@ namespace CryptoChain.Models
             outputMap[senderWallet.PublicKey] = senderWallet.Balance - amount;
             return outputMap;
         }
-        private InputMap CreateInput(Wallet senderWallet, Dictionary<string, long> outputMap)
+        private Input CreateInput(IWallet senderWallet, Dictionary<string, long> outputMap)
         {
-            //var input = new Dictionary<string, object>();
-            //input["timestamp"] = clock.UtcNow.ToString();
-            //input["amount"] = senderWallet.Balance;
-            //input["address"] = senderWallet.PublicKey;
-            //input["signature"] = senderWallet.Sign(outputMap.SerializeObject());
-            return new InputMap {
-                Timestamp= clock.UtcNow,
-                Amount= senderWallet.Balance,
-                Address= senderWallet.PublicKey,
-                Signature= senderWallet.Sign(outputMap.SerializeObject())
+            return new Input
+            {
+                Timestamp = clock.UtcNow,
+                Amount = senderWallet.Balance,
+                Address = senderWallet.PublicKey,
+                Signature = senderWallet.Sign(outputMap.SerializeObject())
             };
         }
 
-        public static bool ValidateTransaction(Transaction transaction)
+        public static bool Validate(Transaction transaction)
         {
             var outputTotal = transaction.OutputMap.Values.Sum();
-            if(transaction.Input.Amount!= outputTotal)
+            if (transaction.Input.Amount != outputTotal)
             {
                 Logger.Info($"Invalid transaction from {transaction.Input.Address}");
                 return false;
             }
-            if(!EllipticCurve.VerifySignature(publicKey: transaction.Input.Address,data:transaction.OutputMap.SerializeObject(),signature:transaction.Input.Signature))
+            if (!EllipticCurve.VerifySignature(publicKey: transaction.Input.Address, data: transaction.OutputMap.SerializeObject(), signature: transaction.Input.Signature))
             {
                 Logger.Info($"Invalid signature from {transaction.Input.Address}");
                 return false;
             }
             return true;
         }
+        public void Update(IWallet senderWallet, string recipient, long amount)
+        {
+            if(amount<=0) throw new InvalidOperationException("Invalid transaction amount.");
+
+            if (this.OutputMap[senderWallet.PublicKey] < amount) throw new InvalidOperationException("Transaction amount exceeds balance.");
+
+            if (this.OutputMap.TryGetValue(recipient, out var existingAmt))
+            {
+                this.OutputMap[recipient] = existingAmt + amount;
+            }
+            else
+            {
+                this.OutputMap[recipient] = amount; 
+            }
+             
+            this.OutputMap[senderWallet.PublicKey] -= amount;
+
+            this.Input = this.CreateInput(senderWallet: senderWallet, outputMap: this.OutputMap);
+        }
+
+
     }
 }

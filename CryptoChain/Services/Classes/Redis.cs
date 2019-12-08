@@ -18,12 +18,15 @@ namespace CryptoChain.Services.Classes
         private readonly ILogger<Redis> _ILogger;
         // private readonly IClock _IClock;
         private readonly IBlockChain _IBlockChain;
+        private readonly ITransactionPool _ITransactionPool;
+        
 
-        public Redis(ILogger<Redis> logger, IBlockChain blockChain)//, IClock clock)
+        public Redis(ILogger<Redis> logger, IBlockChain blockChain, ITransactionPool transactionPool)//, IClock clock)
         {
             this._ILogger = logger;
             // this._IClock = clock;
             this._IBlockChain = blockChain;
+            this._ITransactionPool = transactionPool;
             ConfigurationOptions options = new ConfigurationOptions()
             {
                 ClientName = Constants.APP_NANE,
@@ -70,16 +73,16 @@ namespace CryptoChain.Services.Classes
                 this.Subscriber.Subscribe(string.Concat("*","-",channelInfo.Name)).OnMessage(channelMessage =>
                 {
                     //Note: exceptions are caught and discarded by StackExchange.Redis here, to prevent cascading failures. To handle failures, use a try/catch inside your handler to do as you wish with any exceptions.
-                    _ILogger.LogInformation($"Channel : {(string)channelMessage.Channel} => {(string)channelMessage.Message} ");
-
+                    
                     //Discard Self published message
                     if (((string)channelMessage.Channel).StartsWith(Constants.PUBSUB_CHANNEL_PPREFIX))
                     {
-                        _ILogger.LogInformation($"Discarded Self Published Message from Channel : {(string)channelMessage.Channel}"); 
+                        _ILogger.LogInformation($"Discarded Self Published Message from Channel : {(string)channelMessage.Channel}");
+                        return;
                     }
                     _ILogger.LogInformation($"Channel : {(string)channelMessage.Channel} => {(string)channelMessage.Message} ");
-
-                    switch ((string)channelMessage.Channel)
+                    
+                    switch (((string)channelMessage.Channel).Substring(37, ((string)channelMessage.Channel).Length - 37))
                     {
 
                         case "BLOCKCHAIN":
@@ -94,7 +97,17 @@ namespace CryptoChain.Services.Classes
                                 _ILogger.LogError(ex, $"Error while processing a message from Channel : BLOCKCHAIN");
                             }
                             break;
-
+                        case "TRANSACTION":
+                            try
+                            {
+                                var newTransaction = JsonConvert.DeserializeObject<Transaction>(channelMessage.Message);
+                                this._ITransactionPool.SetTransaction(newTransaction); 
+                            }
+                            catch (Exception ex)
+                            {
+                                _ILogger.LogError(ex, $"Error while processing a message from Channel : TRANSACTION");
+                            }
+                            break;
                         default:
                             _ILogger.LogInformation($"Discarded a message from Channel : {(string)channelMessage.Channel}");
                             break;
@@ -108,6 +121,10 @@ namespace CryptoChain.Services.Classes
         public async Task BroadcastChain()
         {
             await this.PublishToChannelAsync(Constants.PUBSUB_CHANNEL.BLOCKCHAIN, this._IBlockChain.LocalChain.SerializeObject());
+        }
+        public async Task BroadcastTransaction(Transaction transaction)
+        {
+            await this.PublishToChannelAsync(Constants.PUBSUB_CHANNEL.TRANSACTION, transaction.SerializeObject());
         }
     }
 }

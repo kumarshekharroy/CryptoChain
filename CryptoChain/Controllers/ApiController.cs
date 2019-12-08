@@ -24,14 +24,18 @@ namespace CryptoChain.Controllers
         private readonly IClock _IClock;
         private readonly IBlockChain _IBlockChain;
         private readonly IRedis _IRedis;
+        private readonly IWallet _IWallet;
+        private readonly ITransactionPool _ITransactionPool;
 
 
-        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain, IRedis redis)
+        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain, IRedis redis, IWallet wallet, ITransactionPool transactionPool)
         {
             this._ILogger = logger;
             this._IClock = clock;
             this._IBlockChain = blockChain;
             this._IRedis = redis;
+            this._IWallet = wallet;
+            this._ITransactionPool = transactionPool;
         }
         [HttpPost, HttpGet]
         [Route("~/ping")]
@@ -79,7 +83,7 @@ namespace CryptoChain.Controllers
             }
             catch (Exception ex)
             {
-                _ILogger.LogError(ex, $"~/api/mine requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.QueryString.Value}");
+                _ILogger.LogError(ex, $"~/api/mine requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.Body}");
 
                 if (IsDebugging)
                     return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
@@ -88,6 +92,70 @@ namespace CryptoChain.Controllers
             }
 
         }
+        [HttpPost]
+        [Route("transact")]
+        public async Task<IActionResult> transact()
+        {
+            try
+            {
+                using var reader = new StreamReader(Request.Body);
+                var parsed_body = JsonConvert.DeserializeObject<dynamic>(await reader.ReadToEndAsync());
 
+                Transaction transaction;
+                try
+                {
+                    string recipient = parsed_body.recipient?.ToString() ?? throw new ArgumentException("Invalid recipient supplied.");
+
+                    if (!long.TryParse(parsed_body.amount?.ToString(), out long amount)) throw new ArgumentException("Invalid recipient supplied.");
+
+                    transaction = _ITransactionPool.ExistingTransaction(_IWallet.PublicKey);
+
+                    if (transaction == null)
+                        transaction = _IWallet.CreateTransaction(recipient, amount);
+                    else
+                        transaction.Update(_IWallet, recipient, amount);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, new ApiResponse { message = ex.Message });
+                }
+
+                _ITransactionPool.SetTransaction(transaction);
+
+                await _IRedis.BroadcastTransaction(transaction);
+
+                return StatusCode(StatusCodes.Status200OK, transaction);
+            }
+            catch (Exception ex)
+            {
+                _ILogger.LogError(ex, $"~/api/transact requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.Body}");
+
+                if (IsDebugging)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
+                else
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message });
+            }
+
+        }
+      
+        [HttpGet]
+        [Route("transaction-pool")]
+        public IActionResult transactionpool()
+        {
+            try
+            {
+                return StatusCode(StatusCodes.Status200OK, _ITransactionPool.TransactionMap);
+            }
+            catch (Exception ex)
+            {
+                _ILogger.LogError(ex, $"~/api/blocks requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.QueryString.Value}");
+
+                if (IsDebugging)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
+                else
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message });
+            }
+
+        }
     }
 }
