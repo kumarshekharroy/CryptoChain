@@ -11,24 +11,30 @@ namespace CryptoChain.Models
     public class Transaction
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private Clock clock;
+        private static readonly Clock clock = new Clock();
 
         public string ID { get; set; }
         public Dictionary<string, long> OutputMap { get; set; }
         public Input Input { get; set; }
+        //For Deseralizing Only
         public Transaction()
         {
 
         }
-        public Transaction(Wallet senderWallet, string recipient, long amount)
+        public Transaction(IWallet senderWallet, string recipient, long amount)
         {
             this.ID = Guid.NewGuid().ToString();
-            this.clock = new Clock();
             this.OutputMap = this.CreateOutputMap(senderWallet, recipient, amount);
             this.Input = this.CreateInput(senderWallet, this.OutputMap);
         }
+        public Transaction(Dictionary<string, long> outputMap, Input Input)
+        {
+            this.ID = Guid.NewGuid().ToString();
+            this.OutputMap = outputMap;
+            this.Input = Input;
+        }
 
-        private Dictionary<string, long> CreateOutputMap(Wallet senderWallet, string recipient, long amount)
+        private Dictionary<string, long> CreateOutputMap(IWallet senderWallet, string recipient, long amount)
         {
             var outputMap = new Dictionary<string, long>();
             outputMap[recipient] = amount;
@@ -63,7 +69,7 @@ namespace CryptoChain.Models
         }
         public void Update(IWallet senderWallet, string recipient, long amount)
         {
-            if(amount<=0) throw new InvalidOperationException("Invalid transaction amount.");
+            if (amount <= 0) throw new InvalidOperationException("Invalid transaction amount.");
 
             if (this.OutputMap[senderWallet.PublicKey] < amount) throw new InvalidOperationException("Transaction amount exceeds balance.");
 
@@ -73,14 +79,30 @@ namespace CryptoChain.Models
             }
             else
             {
-                this.OutputMap[recipient] = amount; 
+                this.OutputMap[recipient] = amount;
             }
-             
+
             this.OutputMap[senderWallet.PublicKey] -= amount;
 
             this.Input = this.CreateInput(senderWallet: senderWallet, outputMap: this.OutputMap);
         }
 
+
+        public static Transaction RewardTransaction(IWallet minerWallet)
+        {
+            return new Transaction(Input: CreateRewardInput(), outputMap: new Dictionary<string, long> { { minerWallet.PublicKey, Constants.MINING_REWARD } });
+        }
+
+        private static Input CreateRewardInput()
+        {
+            return new Input
+            {
+                Timestamp = clock.UtcNow,
+                Amount = Constants.MINING_REWARD,
+                Address = Constants.MINING_REWARD_INPUT,
+                Signature = Constants.MINING_REWARD_INPUT_SIGNATURE
+            };
+        }
 
     }
 }

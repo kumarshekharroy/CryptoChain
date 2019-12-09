@@ -48,7 +48,7 @@ namespace CryptoChain.Services.Classes
 
         public ReadOnlyCollection<Block> LocalChain { get { return this.localChain.AsReadOnly(); } }
 
-        public void AddBlock(object data)
+        public void AddBlock(List<Transaction> data)
         {
             var newBlock = Block.MineBlock(localChain[localChain.Count - 1], data);
 

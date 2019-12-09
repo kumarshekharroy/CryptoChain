@@ -7,17 +7,19 @@ using CryptoChain.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.Net;
 using Newtonsoft.Json;
+using CryptoChain.Utility;
+using System.Collections.Concurrent;
 
 namespace CryptoChain.Services.Classes
 {
     public class TransactionPool : ITransactionPool
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private Dictionary<string, Transaction> _TransactionMap { get; set; }
+        private ConcurrentDictionary<string, Transaction> _TransactionMap { get; set; }
 
         public TransactionPool()
         {
-            this._TransactionMap = new Dictionary<string, Transaction>();
+            this._TransactionMap = new ConcurrentDictionary<string, Transaction>();
             SyncTransactionPool();
         }
 
@@ -28,7 +30,7 @@ namespace CryptoChain.Services.Classes
             {
                 Logger.Info($"Getting latest Transaction Pool from peer node : {Constants.ROOT_NODE_URL}/api/transaction-pool.");
                 var response = webClient.DownloadString($"{Constants.ROOT_NODE_URL}/api/transaction-pool");
-                var newTransactionMap = JsonConvert.DeserializeObject<Dictionary<string, Transaction>>(response);
+                var newTransactionMap = JsonConvert.DeserializeObject<ConcurrentDictionary<string, Transaction>>(response);
                 this.SetTransactionMap(newTransactionMap);
 
             }
@@ -45,7 +47,7 @@ namespace CryptoChain.Services.Classes
         {
             this._TransactionMap[transaction.ID] = transaction;
         }
-        private void SetTransactionMap(Dictionary<string, Transaction> transactionMap)
+        private void SetTransactionMap(ConcurrentDictionary<string, Transaction> transactionMap)
         {
             this._TransactionMap = transactionMap;
         }
@@ -53,6 +55,22 @@ namespace CryptoChain.Services.Classes
         public Transaction ExistingTransaction(string inputAddress)
         {
             return this._TransactionMap.Values.Where(x => x.Input.Address == inputAddress).FirstOrDefault();
+        }
+        public List<Transaction> ValidTransactions()
+        {
+            return this._TransactionMap.Values.Where(x => Transaction.Validate(x)).ToList();
+        }
+
+        public void ClearBlockchainTransaction(ReadOnlyCollection<Block> chain)
+        {
+            Parallel.ForEach(chain, parallelOptions: new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, block =>
+              {
+                  foreach (var transaction in block.Data)
+                  {
+                      this._TransactionMap.TryRemove(transaction.ID, out _);
+                  }
+
+              });
         }
 
     }

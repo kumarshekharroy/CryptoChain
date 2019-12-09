@@ -24,7 +24,8 @@ namespace CryptoChain
             services.AddSingleton<IBlockChain, BlockChain>();
             services.AddSingleton<ITransactionPool, TransactionPool>();
             services.AddSingleton<IWallet, Wallet>();
-
+            services.AddSingleton<ITransactionMiner, TransactionMiner>();
+            
             services.AddCors(options =>
             {
                 options.AddPolicy(AllowAllOrigins,

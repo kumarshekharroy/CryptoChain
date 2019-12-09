@@ -75,13 +75,13 @@ namespace CryptoChain.Models
                 return Environment.GetEnvironmentVariable("ROOT_NODE_URL") ?? $"http://localhost:{HTTP_PORT}";
             }
         }
-        public static int MINE_RATE_IN_MILLISEC
+        public static int MINING_RATE_IN_MILLISEC
         {
             get
             {
-                if (int.TryParse(Environment.GetEnvironmentVariable("MINE_RATE_IN_MILLISEC") ?? "1000", out var _MINE_RATE_IN_MILLISEC))
-                    return _MINE_RATE_IN_MILLISEC;
-                throw new KeyNotFoundException("Environment variable `MINE_RATE_IN_MILLISEC` is invalid.");
+                if (int.TryParse(Environment.GetEnvironmentVariable("MINING_RATE_IN_MILLISEC") ?? "60000", out var _MINING_RATE_IN_MILLISEC))
+                    return _MINING_RATE_IN_MILLISEC;
+                throw new KeyNotFoundException("Environment variable `MINING_RATE_IN_MILLISEC` is invalid.");
             }
         }
 
@@ -92,9 +92,13 @@ namespace CryptoChain.Models
         public static string GENESIS_PREV_HASH { get { return string.Empty; } }
         public static long GENESIS_NONCE { get { return 0L; } }
         public static int GENESIS_DIFFICULTY { get { return 3; } }
-        public static object GENESIS_DATA { get { return "AabraKaDabra"; } }
-        
+        public static List<Transaction> GENESIS_DATA { get { return new List<Transaction> { new Transaction { ID = "genesis" } }; } }
+
         public static long STARTING_BALANCE { get { return 1000; } }
+
+        public static string MINING_REWARD_INPUT { get { return "mining-reward"; } }
+        public static string MINING_REWARD_INPUT_SIGNATURE { get { return string.Empty; } }
+        public static long MINING_REWARD { get { return 50; } }
 
     }
 }

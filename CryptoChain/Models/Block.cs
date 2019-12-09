@@ -1,6 +1,7 @@
 ﻿using CryptoChain.Services.Classes; 
 using CryptoChain.Utility;
-using System; 
+using System;
+using System.Collections.Generic;
 using System.Linq; 
 
 namespace CryptoChain.Models
@@ -8,7 +9,7 @@ namespace CryptoChain.Models
     public class Block
     { 
         public string LastHash { get; set; }
-        public object Data { get; set; }
+        public List<Transaction> Data { get; set; }
         public long Nonce { get; set; }
         public int Difficulty { get; set; }
         public DateTime Timestamp { get; private set; }
@@ -18,7 +19,7 @@ namespace CryptoChain.Models
 
 
 
-      public Block(DateTime timestamp, string lastHash, string hash, object data, long nonce, int difficulty)
+      public Block(DateTime timestamp, string lastHash, string hash, List<Transaction> data, long nonce, int difficulty)
         {
             this.Timestamp = timestamp;
             this.LastHash = lastHash;
@@ -32,7 +33,7 @@ namespace CryptoChain.Models
         public static Block Genesis() => new Block(timestamp: Constants.GENESIS_TIMESTAMP, data: Constants.GENESIS_DATA, lastHash: Constants.GENESIS_PREV_HASH, nonce: Constants.GENESIS_NONCE, difficulty: Constants.GENESIS_DIFFICULTY, hash: Helper.Sha256(Constants.GENESIS_TIMESTAMP.ToString(), Constants.GENESIS_PREV_HASH, Constants.GENESIS_DATA.SerializeObject(), Constants.GENESIS_NONCE.ToString(), Constants.GENESIS_DIFFICULTY.ToString()));
 
 
-        internal static Block MineBlock(Block lastBlock, object data)
+        internal static Block MineBlock(Block lastBlock, List<Transaction> data)
         {
             using var Clock = new Clock();
 
@@ -41,18 +42,18 @@ namespace CryptoChain.Models
             long nonce = 0L;
             int difficulty = lastBlock.Difficulty;
 
-           // var difficultString = string.Concat(Enumerable.Repeat("0", difficulty));
+            // var difficultString = string.Concat(Enumerable.Repeat("0", difficulty));
 
             do
             {
                 nonce++;
                 timestamp = Clock.UtcNow;
-                difficulty = Block.AdjustDifficulty(lastBlock, timestamp); 
+                difficulty = Block.AdjustDifficulty(lastBlock, timestamp);
 
                 currentBlockHash = Helper.Sha256(timestamp.ToString(), lastBlock.Hash, data.SerializeObject(), nonce.ToString(), difficulty.ToString());
 
-            } while (!Helper.Hex2Binary(currentBlockHash).StartsWith(string.Concat(Enumerable.Repeat("0", difficulty))));
-
+            } //while (!Helper.Hex2Binary(currentBlockHash).StartsWith(string.Concat(Enumerable.Repeat("0", difficulty))));
+            while (!currentBlockHash.StartsWith(string.Concat(Enumerable.Repeat("0", difficulty))));
 
 
 
@@ -65,7 +66,7 @@ namespace CryptoChain.Models
             if (originalBlock.Difficulty <= 1)
                 return 1;
 
-            if ((timestamp - originalBlock.Timestamp).TotalMilliseconds > Constants.MINE_RATE_IN_MILLISEC) return originalBlock.Difficulty - 1;
+            if ((timestamp - originalBlock.Timestamp).TotalMilliseconds > Constants.MINING_RATE_IN_MILLISEC) return originalBlock.Difficulty - 1;
 
             return originalBlock.Difficulty + 1;
         }

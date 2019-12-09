@@ -26,9 +26,10 @@ namespace CryptoChain.Controllers
         private readonly IRedis _IRedis;
         private readonly IWallet _IWallet;
         private readonly ITransactionPool _ITransactionPool;
+        private readonly ITransactionMiner _ITransactionMiner; 
 
 
-        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain, IRedis redis, IWallet wallet, ITransactionPool transactionPool)
+        public ApiController(ILogger<ApiController> logger, IClock clock, IBlockChain blockChain, IRedis redis, IWallet wallet, ITransactionPool transactionPool, ITransactionMiner transactionMiner)
         {
             this._ILogger = logger;
             this._IClock = clock;
@@ -36,6 +37,7 @@ namespace CryptoChain.Controllers
             this._IRedis = redis;
             this._IWallet = wallet;
             this._ITransactionPool = transactionPool;
+            this._ITransactionMiner = transactionMiner;
         }
         [HttpPost, HttpGet]
         [Route("~/ping")]
@@ -72,6 +74,7 @@ namespace CryptoChain.Controllers
         {
             try
             {
+                return StatusCode(StatusCodes.Status405MethodNotAllowed);
                 using var reader = new StreamReader(Request.Body);
                 var parsed_body = JsonConvert.DeserializeObject<dynamic>(await reader.ReadToEndAsync());
 
@@ -157,5 +160,27 @@ namespace CryptoChain.Controllers
             }
 
         }
+
+        [HttpGet]
+        [Route("mine-transactions")]
+        public async Task<IActionResult> minetransactions()
+        {
+            try
+            { 
+                await _ITransactionMiner.MineTransaction();
+                return Redirect("/api/blocks");
+            }
+            catch (Exception ex)
+            {
+                _ILogger.LogError(ex, $"~/api/mine-transactions requested from {HttpContext.GetIP()}.");
+
+                if (IsDebugging)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
+                else
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message });
+            }
+
+        }
+
     }
 }

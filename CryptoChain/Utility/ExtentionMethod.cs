@@ -110,6 +110,24 @@ namespace CryptoChain.Utility
         #endregion
 
 
+        public static Task ParallelForEachAsync<T>(this IEnumerable<T> source, Func<T, Task> funcBody, int noOfChunk =4)
+        {
+            async Task AwaitPartition(IEnumerator<T> partition)
+            {
+                using (partition)
+                {
+                    while (partition.MoveNext())
+                    { await funcBody(partition.Current); }
+                }
+            }
+
+            return Task.WhenAll(
+                System.Collections.Concurrent.Partitioner
+                    .Create(source)
+                    .GetPartitions(noOfChunk)
+                    .AsParallel()
+                    .Select(p => AwaitPartition(p)));
+        }
 
 
     }
