@@ -114,7 +114,7 @@ namespace CryptoChain.Controllers
                     transaction = _ITransactionPool.ExistingTransaction(_IWallet.PublicKey);
 
                     if (transaction == null)
-                        transaction = _IWallet.CreateTransaction(recipient, amount);
+                        transaction = _IWallet.CreateTransaction(recipient, amount,_IBlockChain.LocalChain);
                     else
                         transaction.Update(_IWallet, recipient, amount);
                 }
@@ -140,7 +140,7 @@ namespace CryptoChain.Controllers
             }
 
         }
-      
+
         [HttpGet]
         [Route("transaction-pool")]
         public IActionResult transactionpool()
@@ -151,7 +151,26 @@ namespace CryptoChain.Controllers
             }
             catch (Exception ex)
             {
-                _ILogger.LogError(ex, $"~/api/blocks requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.QueryString.Value}");
+                _ILogger.LogError(ex, $"~/api/transaction-pool requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.QueryString.Value}");
+
+                if (IsDebugging)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
+                else
+                    return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message });
+            }
+
+        }
+        [HttpGet]
+        [Route("wallet-info")]
+        public IActionResult walletinfo()
+        {
+            try
+            {
+                return StatusCode(StatusCodes.Status200OK, new { Address=_IWallet.PublicKey,Balance= Services.Classes.Wallet.CalculateBalance(_IBlockChain.LocalChain,_IWallet.PublicKey)});
+            }
+            catch (Exception ex)
+            {
+                _ILogger.LogError(ex, $"~/api/wallet-info requested from {HttpContext.GetIP()}. Payload : { HttpContext.Request.QueryString.Value}");
 
                 if (IsDebugging)
                     return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { message = ex.Message, data = ex.ToReleventInfo() });
