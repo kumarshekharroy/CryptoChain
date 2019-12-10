@@ -33,7 +33,7 @@ namespace CryptoChain.Services.Classes
             {
                 Logger.Info($"Getting latest chain from peer node : {Constants.ROOT_NODE_URL}/api/blocks.");
                 var response = webClient.DownloadString($"{Constants.ROOT_NODE_URL}/api/blocks");
-                var newChain = JsonConvert.DeserializeObject<List<Block>>(response);
+                var newChain = JsonConvert.DeserializeObject<ReadOnlyCollection<Block>>(response);
                 this.ReplaceChain(newChain);
 
             }
@@ -57,7 +57,70 @@ namespace CryptoChain.Services.Classes
 
         }
 
-        public static bool IsValidChain(List<Block> chain)
+         bool ValidateTransactionData(ReadOnlyCollection<Block> chain)
+        {
+            bool hasPassedAllChecks = true;
+
+            foreach (var block in chain.Skip(1))
+            { 
+                var rewardTransactionCount = 0;
+                 
+                HashSet<Transaction> uniqueTransactions = new HashSet<Transaction>();
+                foreach (var transaction in block.Data)
+                {
+                    if (transaction.Input.Address == Constants.MINING_REWARD_INPUT)
+                    {
+                        if (++rewardTransactionCount > 1)
+                        {
+                            hasPassedAllChecks = false;
+                            Logger.Info("Multiple Miners Rewards transactions found in the block");
+                            break;
+                        } 
+                        if (transaction.OutputMap.Values.FirstOrDefault() != Constants.MINING_REWARD)
+                        {
+                            hasPassedAllChecks = false;
+                            Logger.Info("Miners Reward Amount is invalid in the block");
+                            break;
+                        }
+
+                    }
+                    else //not a reward transaction
+                    {
+                        if (!Transaction.Validate(transaction))
+                        { 
+                            hasPassedAllChecks = false;
+                            Logger.Info("Invalid Transaction");
+                            break; 
+                        }
+
+                        var expectedWalletBalance = Wallet.CalculateBalance(this.LocalChain, transaction.Input.Address);
+                        if (expectedWalletBalance != transaction.Input.Amount)
+                        {
+                            hasPassedAllChecks = false;
+                            Logger.Info("Invalid Transaction input amount");
+                            break;
+                        }
+
+
+                        if (!uniqueTransactions.Add(transaction))
+                        {
+                            hasPassedAllChecks = false;
+                            Logger.Info("Identical Transaction appears more than once in the block.");
+                            break;
+                        }
+
+                    }
+
+                }
+                if (!hasPassedAllChecks)
+                    break;
+            }
+            return hasPassedAllChecks;
+        }
+
+
+
+        public static bool IsValidChain(ReadOnlyCollection<Block> chain)
         {
             if (chain[0].SerializeObject() != Block.Genesis().SerializeObject())
             {
@@ -76,9 +139,9 @@ namespace CryptoChain.Services.Classes
                     Logger.Info("The chain has broken link.");
                     return false;
                 }
-                if (block.Hash != Helper.Sha256(block.Timestamp.ToString(), block.LastHash, block.Data.SerializeObject(),block.Nonce.ToString(),block.Difficulty.ToString()))
+                if (block.Hash != Helper.Sha256(block.Timestamp.ToString(), block.LastHash, block.Data.SerializeObject(), block.Nonce.ToString(), block.Difficulty.ToString()))
                 {
-                    Logger.Info("The chain has invalid block.");
+                    Logger.Info("The chain has invalid block hash.");
                     return false;
                 }
                 if (Math.Abs(lastBlock.Difficulty - block.Difficulty) > 1)
@@ -92,29 +155,35 @@ namespace CryptoChain.Services.Classes
             return true;
         }
 
-        bool IBlockChain.IsValidChain(List<Block> chain)
+        bool IBlockChain.IsValidChain(ReadOnlyCollection<Block> chain)
         {
             return BlockChain.IsValidChain(chain);
         }
 
 
 
-        public void ReplaceChain(List<Block> chain)
+        public bool ReplaceChain(ReadOnlyCollection<Block> chain)
         {
             if (this.localChain.Count >= chain.Count)
             {
                 Logger.Info("The incoming chain must be longer.");
-                return;
+                return false;
             }
             if (!BlockChain.IsValidChain(chain))
             {
                 Logger.Info("The incoming chain must be valid.");
-                return;
+                return false;
+            }
+            if (!this.ValidateTransactionData(chain))
+            {
+                Logger.Info("The incoming chain has invalid transaction.");
+                return false;
             }
 
             Logger.Info("The incoming chain is valid.");
-            this.localChain = chain;
+            this.localChain = chain.ToList();
             Logger.Info("Replaced local chain.");
+            return true;
         }
 
     }

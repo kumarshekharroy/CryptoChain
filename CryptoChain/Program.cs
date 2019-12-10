@@ -23,8 +23,8 @@ namespace CryptoChain
         { 
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
-            { 
-                logger.Info("init main function");
+            {
+                logger.Info("init main function"); 
                 var host = CreateHostBuilder(args).Build();
 
                 //using (var scope = host.Services.CreateScope())
@@ -77,14 +77,17 @@ namespace CryptoChain
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                      //options.Limits.MinResponseDataRate =
                      //    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
-                      
+
+                     var port = args.Where(x => x.ToLower().StartsWith("port:")).Select(x => int.Parse(x.Replace("port:", string.Empty).Trim())).FirstOrDefault();
+
+
                      if (Debugger.IsAttached)
                      { 
                          options.Listen(IPAddress.Loopback, Constants.HTTP_PORT+1);
                      }
                      else
                      {
-                         options.Listen(IPAddress.Loopback, Constants.HTTP_PORT);
+                         options.Listen(IPAddress.Loopback, port);
                      }
                  });
              });

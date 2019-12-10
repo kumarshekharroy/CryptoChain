@@ -8,6 +8,7 @@ using CryptoChain.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using CryptoChain.Utility;
+using System.Collections.ObjectModel;
 
 namespace CryptoChain.Services.Classes
 {
@@ -88,8 +89,9 @@ namespace CryptoChain.Services.Classes
                         case "BLOCKCHAIN":
                             try
                             {
-                                var newChain = JsonConvert.DeserializeObject<List<Block>>(channelMessage.Message);
-                                this._IBlockChain.ReplaceChain(newChain);
+                                var newChain = JsonConvert.DeserializeObject<ReadOnlyCollection<Block>>(channelMessage.Message);
+                                if (this._IBlockChain.ReplaceChain(newChain))
+                                    _ITransactionPool.ClearBlockchainTransaction(this._IBlockChain.LocalChain);
 
                             }
                             catch (Exception ex)

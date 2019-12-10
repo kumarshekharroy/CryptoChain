@@ -7,8 +7,8 @@ namespace CryptoChain.Services.Interfaces
     public interface IBlockChain
     {
         void AddBlock(List<Transaction> data);
-        void ReplaceChain(List<Block> chain);
-        bool IsValidChain(List<Block> chain);
+        bool ReplaceChain(ReadOnlyCollection<Block> chain);
+        bool IsValidChain(ReadOnlyCollection<Block> chain);
         ReadOnlyCollection<Block> LocalChain { get; }
     }
 }
