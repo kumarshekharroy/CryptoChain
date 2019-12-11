@@ -166,7 +166,7 @@ namespace CryptoChain.Controllers
         {
             try
             {
-                return StatusCode(StatusCodes.Status200OK, new { Address=_IWallet.PublicKey,Balance= Services.Classes.Wallet.CalculateBalance(_IBlockChain.LocalChain,_IWallet.PublicKey)});
+                return StatusCode(StatusCodes.Status200OK, new { Address=_IWallet.PublicKey,Balance= Services.Classes.Wallet.CalculateBalance(_IBlockChain.LocalChain,_IWallet.PublicKey,_IClock.UtcNow)});
             }
             catch (Exception ex)
             {

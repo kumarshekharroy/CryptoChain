@@ -1,4 +1,5 @@
 ﻿using CryptoChain.Models;
+using System;
 using System.Collections.Generic;
 
 namespace CryptoChain.Services.Interfaces
@@ -10,6 +11,6 @@ namespace CryptoChain.Services.Interfaces
 
         Transaction CreateTransaction(string recipient, long amount, IReadOnlyCollection<Block> chain);
         string Sign(string data);
-        long CalculateBalance(IReadOnlyCollection<Block> chain, string address);
+        long CalculateBalance(IReadOnlyCollection<Block> chain, string address,DateTime timestamp);
     }
 }

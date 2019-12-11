@@ -93,7 +93,7 @@ namespace CryptoChain.Services.Classes
                             break; 
                         }
 
-                        var expectedWalletBalance = Wallet.CalculateBalance(this.LocalChain, transaction.Input.Address);
+                        var expectedWalletBalance = Wallet.CalculateBalance(this.LocalChain, transaction.Input.Address,transaction.Input.Timestamp);
                         if (expectedWalletBalance != transaction.Input.Amount)
                         {
                             hasPassedAllChecks = false;
