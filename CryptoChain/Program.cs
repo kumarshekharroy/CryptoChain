@@ -20,28 +20,51 @@ namespace CryptoChain
     {
 
         public static void Main(string[] args)
-        { 
+        {
+
+
+
+           //var keyPair= EllipticCurve.GenerateKeys();
+
+           // Console.WriteLine("Original Key Pair ==============");
+           // Console.WriteLine($"pub===> {keyPair.PublicKey()}");
+           // Console.WriteLine($"priv===> {keyPair.PrivateKey()}");
+
+           // var serializeKeyPair = keyPair.SerializeKeyPair();
+
+           // Console.WriteLine("Serialized Key Pair ==============");
+           // Console.WriteLine($"pub===> {serializeKeyPair.pub}");
+           // Console.WriteLine($"priv===> {serializeKeyPair.priv}");
+             
+
+           // Console.WriteLine("Deserialized Key Pair ============== Should be equal to Original Key Pair");
+           // Console.WriteLine($"pub===> {EllipticCurve.DeserializePublicKey(serializeKeyPair.pub).ToEncodedString()}");
+           // Console.WriteLine($"priv===> {EllipticCurve.DeserializePrivateKey(serializeKeyPair.priv).ToEncodedString()}");
+
+
+             
+           // Console.WriteLine("ReSerialized Key Pair ============== Should be equal to Serialized Key Pair");
+           // Console.WriteLine($"pub===> {EllipticCurve.DeserializePublicKey(serializeKeyPair.pub).SerializePublicKey()}");
+           // Console.WriteLine($"priv===> {EllipticCurve.DeserializePrivateKey(serializeKeyPair.priv).SerializePrivateKey()}");
+
+
+
+
+
+
+
+
+
+
+
+
+
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
                 logger.Info("init main function"); 
-                var host = CreateHostBuilder(args).Build();
-
-                //using (var scope = host.Services.CreateScope())
-                //{
-                //    var services = scope.ServiceProvider;
-
-                //    try
-                //    {
-                //        var context = services.GetRequiredService<Database>();
-
-                //        //context.Database.Migrate(); // apply all migrations 
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        logger.Error(ex, "an error occurred while applying mgration to DB.");
-                //    }
-                //}
+                var host = CreateHostBuilder(args).Build(); 
+                
                 host.Run();
 
             }
